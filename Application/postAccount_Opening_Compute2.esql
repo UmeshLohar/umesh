@@ -1,0 +1,20 @@
+
+
+CREATE COMPUTE MODULE postAccount_Opening_Compute2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		 CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+	
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		SET OutputRoot.JSON.Data.statusCode  = '200';
+		SET OutputRoot.JSON.Data.STATUS = 'YOUR ACCOUNT IS SUCCESSFULLY GENERATED'; 
+		SET OutputRoot.JSON.Data.CustomerId = Environment.CustomerId;
+		SET OutputRoot.JSON.Data.AccountNumber = Environment.AccountNumber; 
+		SET OutputRoot.JSON.Data.IFSC = Environment.IFSC;
+		SET OutputRoot.JSON.Data.BRANCH = Environment.BRANCH;
+	END;
+END MODULE;

@@ -1,0 +1,46 @@
+
+
+CREATE COMPUTE MODULE postGer_otp_Compute1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		 CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		DECLARE cust_email CHARACTER;
+		SET cust_email=Environment.MAILID.MAIL_ID;
+		
+		SET OutputRoot.EmailOutputHeader.To =cust_email;
+		SET OutputRoot.EmailOutputHeader.Subject = 'YOUR OTP FOR UPDATING PASSWORD';
+		
+--		DECLARE mail_text,OTP_CHAR CHARACTER;
+--		
+--		SET OTP_CHAR=CAST(Environment.Result.Otp AS CHARACTER);
+--
+--		SET mail_text='Dear Accountholder,
+--
+--		Please enter below OTP to update to your EIDIKO ACCOUNT password
+--
+--		OTP :' ||OTP_CHAR||'
+--
+--		Note: This Otp is valid for next 10 minutes only...
+--
+--		Regards
+--
+--		Eidiko Team';	
+--		
+--		SET OutputRoot.BLOB.BLOB = CAST(mail_text AS BLOB CCSID 1208);
+
+		SET OutputRoot.XMLNSC.MESSAGE = 'Dear Accountholder,
+
+		Please enter below OTP to update to your EIDIKO ACCOUNT password
+
+		OTP : ' || Environment.OTP || ' Note: This Otp is valid for next 10 minutes only...
+
+		Regards
+
+		Eidiko Team';
+	END;
+END MODULE;

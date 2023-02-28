@@ -1,0 +1,102 @@
+
+
+CREATE COMPUTE MODULE getValidateOTP_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		DECLARE ref REFERENCE TO InputRoot.JSON.Data;
+		DECLARE query3 CHARACTER;
+		SET query3 = 'SELECT USER_ID FROM account_details where Customer_Id=?';
+		DECLARE USERID INTEGER;
+		SET Environment.USERID = PASSTHRU(query3 VALUES(ref.Customer_Id));
+		--Otp Insert Time
+		DECLARE query CHARACTER;
+		DECLARE query1 CHARACTER;
+		DECLARE query4 CHARACTER;
+		DECLARE currentTime CHARACTER;
+		DECLARE currentDate CHARACTER;
+		SET query = 'SELECT CURRENTTIME FROM ACCOUNT_OTP_VERIFICATION WHERE USER_ID=?';
+		SET query1 = 'SELECT CURRENTDATE FROM ACCOUNT_OTP_VERIFICATION WHERE USER_ID=?';
+		SET Environment.currentTime = PASSTHRU(query VALUES(Environment.USERID.USER_ID));
+		SET Environment.currentDate = PASSTHRU(query1 VALUES(Environment.USERID.USER_ID));
+		
+		DECLARE OTP CHARACTER;
+		SET query4 = 'SELECT OTP FROM ACCOUNT_OTP_VERIFICATION WHERE USER_ID=?';
+		SET Environment.OTP = PASSTHRU(query4 VALUES(Environment.USERID.USER_ID));
+		
+		SET Environment.currentTime = SUBSTRING(Environment.currentTime.CURRENTTIME FROM 1 FOR 2);
+		DECLARE ctime  CHARACTER;
+		SET ctime = Environment.currentTime;
+		
+		--SET OutputRoot.JSON.Data.TIME1=Environment.currentTime;
+		--SET OutputRoot.JSON.Data.DATE1=Environment.currentDate;
+		
+		
+		
+		DECLARE Sub_time CHARACTER;
+		SET Sub_time =  SUBSTRING(Environment.currentTime.CURRENTTIME FROM 4 FOR 2);
+		DECLARE intime INTEGER;
+		SET intime = CAST(Sub_time AS INTEGER);
+		--SET OutputRoot.JSON.Data.targetInteger=intime;
+		SET intime = intime+10;
+		--SET OutputRoot.JSON.Data.targetInteger1=intime;
+		
+		--Otp Validation Time
+		DECLARE T1 TIME;
+		DECLARE currentTime1 CHARACTER;
+		SET T1 = CURRENT_TIME;
+		SET currentTime1 = T1;
+		SET currentTime1 = SUBSTRING(currentTime1 FROM 7 FOR 8);
+		SET Environment.currentTime1 = currentTime1;
+		DECLARE D1 DATE;
+		DECLARE currentDate1 CHARACTER;
+		SET D1 = CURRENT_DATE;
+		SET currentDate1 = D1;
+		SET currentDate1 = SUBSTRING(currentDate1 FROM 7 FOR 10);
+		SET Environment.currentDate1 = currentDate1;
+		
+		--SET OutputRoot.JSON.Data.TIME2=Environment.currentTime1;
+		--SET OutputRoot.JSON.Data.DATE2=Environment.currentDate1;
+		
+		DECLARE Sub_time1 CHARACTER;
+		SET Sub_time1 =  SUBSTRING(currentTime1 FROM 4 FOR 2);
+		DECLARE intime1 INTEGER;
+		SET intime1 = CAST(Sub_time1 AS INTEGER);
+		--SET OutputRoot.JSON.Data.targetInteger2=intime1;
+		
+		SET Environment.currentTime1 = SUBSTRING(currentTime1 FROM 1 FOR 2);
+		DECLARE ctime1 CHARACTER;
+		SET ctime1 = Environment.currentTime1;
+		
+		IF ctime1 = ctime THEN
+			IF Environment.currentDate.CURRENTDATE = Environment.currentDate1 THEN
+				IF intime > intime1 THEN
+					IF Environment.OTP.OTP = ref.OTP THEN
+						SET OutputRoot.JSON.Data.STATUSCODE = '200';
+						SET OutputRoot.JSON.Data.MESSAGE = 'VALID OTP';
+					ELSE 
+						SET OutputRoot.JSON.Data.STATUSCODE = '400';
+						SET OutputRoot.JSON.Data.MESSAGE = 'NOT VALID OTP';
+					END IF;
+				ELSE
+					SET OutputRoot.JSON.Data.STATUSCODE = '200';
+					SET OutputRoot.JSON.Data.MESSAGE = 'TIME OUT';
+				END IF;
+			ELSE
+				SET OutputRoot.JSON.Data.STATUSCODE = '200';
+				SET OutputRoot.JSON.Data.MESSAGE = 'TIME OUT';	
+			END IF;
+		ELSE
+			SET OutputRoot.JSON.Data.STATUSCODE = '200';
+			SET OutputRoot.JSON.Data.MESSAGE = 'TIME OUT';				
+		END IF;
+	
+		
+	END;
+END MODULE;

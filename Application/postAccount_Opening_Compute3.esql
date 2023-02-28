@@ -1,0 +1,50 @@
+
+
+CREATE COMPUTE MODULE postAccount_Opening_Compute3
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		 CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		-- Add recipient information to the EmailOutputHeader
+		
+
+		
+		DECLARE cust_email CHARACTER;
+		SET cust_email=Environment.mail;
+		SET OutputRoot.EmailOutputHeader.To =cust_email;
+		--SET OutputRoot.EmailOutputHeader.Cc = 'mukeshkumar.eidiko@gmail.com';
+		--SET OutputRoot.EmailOutputHeader.Bcc = 'umeshlohare49@gmail.com';
+		--DECLARE cust_fname CHARACTER;
+		--SET cust_fname = Environment.FNAME;
+		--DECLARE cust_lname CHARACTER;
+		--SET cust_lname = Environment.LNAME;
+		
+		--IF InputRoot.JSON.Data.statusMessage= cust_fname || cust_lname ||' already exist' THEN 
+		--	SET OutputRoot.XMLNSC.Data.Account.STATUS = ' STATUS : ' || CAST(InputRoot.JSON.Data.STATUS AS CHARACTER);
+		
+		--ELSE
+
+		-- Add sender information to EmailOutputHeader
+		--SET OutputRoot.EmailOutputHeader.From = 'umesh.lohar@eidiko-india.com';
+		--SET OutputRoot.EmailOutputHeader."Reply-To" = '<reply email address>';
+
+		-- Add subject to EmailOutputHeader
+		SET OutputRoot.EmailOutputHeader.Subject = 'accout genearted succefully';
+
+		-- Add SMTP server information to the LocalEnvironment
+		--SET OutputLocalEnvironment.Destination.Email.SMTPServer ='smtp.gmail.com:587';
+
+
+		-- Create a new message body, which will be sent as the main text of the email.
+		SET OutputRoot.XMLNSC.Data.Account.STATUS = ' STATUS : ' || CAST(InputRoot.JSON.Data.statusMessage AS CHARACTER);
+		SET OutputRoot.XMLNSC.Data.Account.CustomerId =' CustomerId : ' || CAST(InputRoot.JSON.Data.CustomerId AS CHARACTER);
+		SET OutputRoot.XMLNSC.Data.Account.AccountNumber =' AccountNumber : ' || CAST(InputRoot.JSON.Data.AccountNumber AS CHARACTER);
+		SET OutputRoot.XMLNSC.Data.Account.IFSC = ' IFSC : ' || CAST(InputRoot.JSON.Data.IFSC AS CHARACTER);
+		SET OutputRoot.XMLNSC.Data.Account.BRANCH =' BRANCH : ' || CAST(InputRoot.JSON.Data.BRANCH AS CHARACTER);
+		--END IF; 
+	END;
+END MODULE;

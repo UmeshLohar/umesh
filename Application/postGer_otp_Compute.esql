@@ -1,0 +1,89 @@
+
+
+CREATE COMPUTE MODULE postGer_otp_Compute
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		DECLARE ref REFERENCE TO InputRoot.JSON.Data;
+		DECLARE mail CHARACTER;
+		SET mail =  ref.MAIL_ID;
+		DECLARE query CHARACTER;
+		SET query = 'SELECT USER_ID FROM account_details where Customer_Id=?';
+		DECLARE USERID INTEGER;
+		SET Environment.USERID = PASSTHRU(query VALUES(ref.Customer_Id));
+		--SET OutputRoot.JSON.Data.ID = Environment.USERID;
+		DECLARE query1 CHARACTER;
+		SET query1 = 'SELECT MAIL_ID FROM USER_DETAILS where USER_ID=?';
+		DECLARE MAILID CHARACTER;
+		SET Environment.MAILID = PASSTHRU(query1 VALUES(Environment.USERID.USER_ID));
+		
+		IF Environment.MAILID.MAIL_ID = ref.MAIL_ID THEN 
+			DECLARE OTP CHARACTER;
+			SET OTP = RAND()*10000000000000;
+			SET OTP = SUBSTRING(OTP FROM 3 FOR 6);
+			SET Environment.OTP = OTP;
+		 
+		DECLARE T TIME;
+		DECLARE currentTime CHARACTER;
+		SET T = CURRENT_TIME;
+		SET currentTime = T;
+		SET currentTime = SUBSTRING(currentTime FROM 7 FOR 8);
+		SET Environment.currentTime = currentTime ;
+		--SET OutputRoot.JSON.Data.T2=currentTime;
+		DECLARE D DATE;
+		DECLARE currentDate CHARACTER;
+		SET D = CURRENT_DATE;
+		SET currentDate = D;
+		SET currentDate = SUBSTRING(currentDate FROM 7 FOR 10);
+		SET Environment.currentDate = currentDate;
+		--SET OutputRoot.JSON.Data.D2=currentDate;
+--		DECLARE Sub_time CHARACTER;
+--		SET Sub_time =  SUBSTRING(currentTime FROM 4 FOR 2);
+--		DECLARE intime INTEGER;
+--		SET intime = CAST(Sub_time AS INTEGER);
+--		SET OutputRoot.JSON.Data.targetInteger=intime;
+--		SET intime = intime+10;
+--		SET OutputRoot.JSON.Data.targetInteger1=intime;
+		DECLARE query2 CHARACTER;
+		SET query2 = 'SELECT USER_ID FROM ACCOUNT_OTP_VERIFICATION where MAIL_ID =?';
+		DECLARE USERID1 CHARACTER;
+		SET Environment.USERID1 = PASSTHRU(query2 VALUES(Environment.MAILID.MAIL_ID));
+--		
+		
+		IF Environment.USERID1.USER_ID = Environment.USERID.USER_ID THEN 
+		DECLARE updateQuery CHARACTER;
+		SET updateQuery ='UPDATE ACCOUNT_OTP_VERIFICATION
+		SET OTP = ?, CURRENTTIME = ?, CURRENTDATE= ?
+		WHERE USER_ID = ?';
+		DECLARE APP CHARACTER;
+		SET Environment.APP = PASSTHRU(updateQuery VALUES(OTP, currentTime, currentDate, Environment.USERID1.USER_ID));
+		
+			SET OutputRoot.JSON.Data.STATUS_CODE = '200';
+			SET OutputRoot.JSON.Data.STAUS_MESSAGE = 'SUCCESS'; 
+			SET OutputRoot.JSON.Data.OTP = OTP;
+		
+		--UPDATE DataSource.account_details1 SET OTP = OTP, CURRENTTIME = currentTime, CURRENTDATE= currentDate
+		--WHERE DataSource.USER_ID = Environment.USERID.USER_ID;
+		
+		ELSE
+		
+		 INSERT INTO DataSource.ACCOUNT_OTP_VERIFICATION VALUES(Environment.USERID.USER_ID, Environment.MAILID.MAIL_ID, OTP, Environment.currentTime, Environment.currentDate);
+		 
+		 	SET OutputRoot.JSON.Data.STATUS_CODE = '200';
+			SET OutputRoot.JSON.Data.STAUS_MESSAGE = 'SUCCESS'; 
+			SET OutputRoot.JSON.Data.OTP = OTP;
+			
+		END IF;
+		
+		ELSE
+			SET OutputRoot.JSON.Data.MESSAGE = 'NOT VALID USER';
+		END IF;
+		
+		--SET OutputRoot.JSON.Data.ID = Environment.MAILID;
+	END;
+END MODULE;

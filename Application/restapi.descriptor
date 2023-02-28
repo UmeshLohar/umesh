@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<ns2:restapiDescriptor xmlns="http://com.ibm.etools.mft.descriptor.base" xmlns:ns2="http://com.ibm.etools.mft.descriptor.restapi" definitionType="openapi_3" definitionFile="openapi.json" implementation="gen/Application.msgflow" https="false" definitionWithExtRef="false" faultFormat="JSON">
+    <ns2:operations>
+        <ns2:operation name="getValidateOTP" implementation="getValidateOTP.subflow"/>
+        <ns2:operation name="postAccount_Opening" implementation="postAccount_Opening.subflow"/>
+        <ns2:operation name="postGet_otp" implementation="postGet_otp.subflow"/>
+        <ns2:operation name="postUpdatePassword" implementation="postUpdatePassword.subflow"/>
+    </ns2:operations>
+    <ns2:errorHandlers/>
+</ns2:restapiDescriptor>

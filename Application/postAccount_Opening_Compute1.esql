@@ -1,0 +1,118 @@
+
+
+CREATE COMPUTE MODULE postAccount_Opening_Compute1
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+		DECLARE AccountNumber CHARACTER;
+		DECLARE CustomerId CHARACTER;
+		DECLARE IFSC CHARACTER;
+		DECLARE BRANCH CHARACTER;
+		DECLARE ID INTEGER;
+		DECLARE Ref REFERENCE TO InputRoot.JSON.Data;
+		DECLARE FILE_ID CHARACTER;
+
+		
+		--DECLARE  USER_ID CHARACTER;
+		--SET  USER_ID = InputRoot.JSON.Data.FIRST_NAME || RAND()*1000;
+		DECLARE query CHARACTER;
+		SET query = 'SELECT USER_ID FROM USER_DETAILS WHERE ADHAR_NUMBER=?';
+		SET Environment.ID = PASSTHRU(query VALUES(Ref.ADHAR_NUMBER));
+		SET ID=CAST(Environment.ID.USER_ID AS INTEGER);
+		SET FILE_ID = CAST(ID AS CHARACTER);
+		
+		
+		
+		DECLARE decoded BLOB BASE64DECODE(Environment.original);
+		
+		SET OutputLocalEnvironment.Destination.File.Name = FILE_ID || '.jpg';
+		
+		SET OutputRoot.BLOB.BLOB = decoded;
+		
+		PROPAGATE TO TERMINAL 'out1';
+		
+		SET IFSC = 'ESIH846578';
+		SET BRANCH = 'hyderabad';
+		
+		SET CustomerId = RAND()*100000000000000000000000;
+		SET CustomerId = SUBSTRING(CustomerId FROM 3 FOR 10);
+		
+		SET AccountNumber = RAND()*1000000000000000000;
+		SET AccountNumber = SUBSTRING(AccountNumber FROM 3 FOR 10);
+		
+		--DECLARE query CHARACTER;
+		--SET query = 'SELECT USER_ID FROM USER_DETAILS WHERE ADHAR_NUMBER=?';
+		--SET Environment.ID = PASSTHRU(query VALUES(Ref.ADHAR_NUMBER));
+		--SET ID=CAST(Environment.ID.USER_ID AS INTEGER);
+		
+		
+		DECLARE query1 CHARACTER;
+		SET query1 ='UPDATE ACCOUNT_DETAILS
+		SET Account_Number = ?, Customer_Id = ?, BRANCH= ?, IFSC= ?
+		WHERE USER_ID = ?';
+		DECLARE APP CHARACTER;
+		SET Environment.APP = PASSTHRU(query1 VALUES(AccountNumber,CustomerId,BRANCH,IFSC,ID));
+		
+		SET Environment.CustomerId = CustomerId;
+		SET Environment.AccountNumber=AccountNumber;
+		SET Environment.IFSC=IFSC;
+		SET Environment.BRANCH=BRANCH;
+		--INSERT INTO DataSource.ACCOUNT_DETAILS(Account_Number, Customer_Id, BRANCH, IFSC) VALUES (AccountNumber, CustomerId, BRANCH, IFSC);
+		
+		SET OutputRoot.JSON.Data.statusCode	= '200';
+		SET OutputRoot.JSON.Data.statusMessage = 'YOUR ACCOUNT IS SUCCESSFULLY GENERATED';
+		SET OutputRoot.JSON.Data.CustomerId=CustomerId;
+		SET OutputRoot.JSON.Data.AccountNumber=AccountNumber;
+		SET OutputRoot.JSON.Data.IFSC = IFSC;
+		SET OutputRoot.JSON.Data.BRANCH = BRANCH;
+		
+	
+		DECLARE blobdata BLOB ASBITSTREAM(InputRoot.JSON.Data  ENCODING 546 CCSID 1208);
+        DECLARE Request CHARACTER CAST(blobdata AS CHARACTER CCSID 1208);
+		DECLARE blobdata1 BLOB ASBITSTREAM(OutputRoot.JSON.Data ENCODING 546 CCSID 1208);
+		DECLARE Response CHARACTER CAST(blobdata1 AS CHARACTER CCSID 1208);
+		DECLARE type INTEGER;
+		DECLARE text CHARACTER;
+		DECLARE ref REFERENCE TO InputExceptionList.*[<];
+		WHILE ENDSWITH(FIELDNAME(ref),'Exception') DO			
+				SET type = ref.Insert[<].Type;
+				SET text = ref.Insert[<].Text;
+			MOVE ref LASTCHILD;
+		END WHILE;
+		CALL login1 (ApplicationLabel,NodeLabel,Request,Response,type,text);	
+	
+	
+	
+		DECLARE VAR BOOLEAN ;
+		DECLARE rc BOOLEAN;
+		DECLARE inp_req, out_req BLOB;
+		
+		--SET inp_req = CAST(ASBITSTREAM(InputRoot.JSON.Data CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId);
+		--SET out_req = CAST(ASBITSTREAM(OutputRoot.JSON.Data CCSID InputRoot.Properties.CodedCharSetId ENCODING InputRoot.Properties.Encoding) AS CHARACTER CCSID InputRoot.Properties.CodedCharSetId);
+		CALL initLog4j('C:\LOGS\Log4jConfigurationFile.xml') INTO rc;
+		CALL writeToLogFile(MessageFlowLabel, 'service_INFO', 'INFO','APPLICATION_DATA' || Request) INTO VAR;
+		CALL writeToLogFile(MessageFlowLabel, 'service_INFO', 'INFO','APPLICATION_DATA' || Response) INTO VAR;
+	END;
+END MODULE;
+
+	CREATE PROCEDURE login1 ( IN Application_Name CHARACTER,IN Node CHARACTER,IN Request CHARACTER,IN Response CHARACTER,IN Exception_Type INTEGER,IN Exception_Text CHARACTER)
+	LANGUAGE DATABASE
+	EXTERNAL NAME "DB_LOGGING1";	
+	
+	
+	
+	CREATE FUNCTION writeToLogFile( IN COMPONENT_NAME CHARACTER,IN LOGGER_NAME CHARACTER,IN LEVEL CHARACTER,IN TEXT CHARACTER )
+	RETURNS BOOLEAN
+	LANGUAGE JAVA
+	EXTERNAL NAME "com.ibm.broker.IAM3.Log4jNode.log";
+
+	CREATE FUNCTION initLog4j( IN CONFIG_FILE_NAME CHARACTER )
+	RETURNS BOOLEAN
+	LANGUAGE JAVA
+	EXTERNAL NAME "com.ibm.broker.IAM3.Log4jNode.initLog4j";

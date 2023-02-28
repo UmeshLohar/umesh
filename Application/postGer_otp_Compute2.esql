@@ -1,0 +1,17 @@
+
+
+CREATE COMPUTE MODULE postGer_otp_Compute2
+	CREATE FUNCTION Main() RETURNS BOOLEAN
+	BEGIN
+		
+		CALL CopyEntireMessage();
+		RETURN TRUE;
+	END;
+
+
+	CREATE PROCEDURE CopyEntireMessage() BEGIN
+			SET OutputRoot.JSON.Data.STATUS_CODE = '200';
+			SET OutputRoot.JSON.Data.STAUS_MESSAGE = 'SUCCESS'; 
+			SET OutputRoot.JSON.Data.OTP =  Environment.OTP;
+	END;
+END MODULE;
